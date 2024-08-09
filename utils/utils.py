@@ -1,6 +1,6 @@
 from utils.paper import Paper
 from typing import Tuple, Optional, List
-from RAI import QAGPT
+from Searching_science_papers.RAI import QAGPT
 
 def get_pdf_links(list_papers: List[Paper], pdf_amount_needed: int = 5) -> Tuple[List[str], Optional[str]]:
     """

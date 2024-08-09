@@ -10,7 +10,8 @@ Streamlit
 
 Склонируйте репозиторий:
 
-git clone https://github.com/username/SSP.git
+git clone https://github.com/VladislavKonoplitskij/SSP.git
+
 cd SSP
 
 Установите необходимые зависимости:
