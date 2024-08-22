@@ -1,9 +1,9 @@
 from easydict import EasyDict as edict
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from Relevance_search import Paper_Relevance_search
 from utils.paper import Paper
-from utils.pdf_handler import PDF_Handler
-from utils.utils import get_pdf_links
+from utils.summary_handler import Summary_Handler
+from utils.func import get_pdf_links
 
 class Paper_Frame():
     
@@ -163,7 +163,7 @@ class Paper_Frame():
     })
 
     # Базовые настройки запроса в Sematic Scholar
-    filter_settings: edict = edict({
+    default_filter_settings: edict = edict({
         "request_fields_settings": {
             "title": True,
             "year": True,
@@ -176,42 +176,31 @@ class Paper_Frame():
             "abstract": True,
         },
         "request_non_fields_settings": {},
-        "client_settings": {
-            "summaries_settings": {
-                "gpt_model": "gpt-4o",
-                "amount_to_summarize": 5,
-                "summarizer_word_limit": 1000,
-            },
-            "analyse_settings": {},
-            "paper_search_settings":{
-                "gpt_model": "gpt-4o",
-                "gpt_api_key": "",
-                "semantic_scholar_api_key": None
-            }
-        },
     })
     
-    def get_papers(self, query: str) -> List[Paper]|str:
+    def get_papers(self, query: str, filter_settings: Dict[str, str|int], global_settings: Dict[str, str]) -> List[Paper]|str:
         """
         Получение статей из базы данных Semantic Scholar.
         query - запрос пользователя
-        request_filter_attrs - фильтры, установленные пользователем
+        filter_settings - фильтры, установленные пользователем
+        request_fields_settings - настройки для "fields" в request_attrs
+        request_non_fields_settings - настройки для остальных ключей в request_attrs
         """
-        self.request_attrs.fields.update(self.filter_settings.request_fields_settings)
-        self.request_attrs.update(self.filter_settings.request_non_fields_settings)
-        search_settings = self.filter_settings.client_settings.paper_search_settings
-        return Paper_Relevance_search(gpt_model=search_settings.gpt_model, 
-                                      gpt_api_key=search_settings.gpt_api_key,
-                                      semantic_scholar_api_key=search_settings.semantic_scholar_api_key
-                                      ).get_list_of_papers(query, self.request_attrs)
+        self.default_filter_settings["request_fields_settings"].update(filter_settings["request_fields_settings"])
+        self.default_filter_settings["request_non_fields_settings"].update(filter_settings["request_non_fields_settings"])
+        self.request_attrs.fields.update(self.default_filter_settings["request_fields_settings"])
+        self.request_attrs.update(self.default_filter_settings["request_non_fields_settings"])
+        return Paper_Relevance_search().get_list_of_papers(query, self.request_attrs, global_settings)
 
-    def get_summaries(self, papers_list: List[Paper]) -> Tuple[str, str]:
+    def get_summaries(self, papers_list: List[Paper], summaries_settings: Dict[str, str|int], global_settings: Dict[str, str]) -> Tuple[str, str]:
         """
         Статьи, получаемые из базы данных Semantic Scholar опционально имеют ссылки на pdf-версии
         Мы получаем заданное пользователем число этих ссылок и обрабатываем документы, на них находящиеся.
         В дальнейшем происходит суммирование этих статей и последующее объединение их в одно краткое изложение
         """
-        summarize_settings = self.filter_settings.client_settings.summaries_settings
-        dict_pdf_links, error = get_pdf_links(papers_list, summarize_settings.amount_to_summarize)
-        summary = PDF_Handler().main_frame(list(dict_pdf_links.values()), summarize_settings.gpt_model, summarize_settings.summarizer_word_limit)
+        dict_pdf_links, error = get_pdf_links(papers_list, summaries_settings["paper_amount"])
+        summary = Summary_Handler().main_frame(list(dict_pdf_links.values()),
+                                               summaries_settings["word_amount"],
+                                               global_settings
+                                            )
         return summary, error
