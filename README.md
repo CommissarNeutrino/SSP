@@ -1,3 +1,5 @@
+!Note: Проект находится в разработке
+
 SSP (Search of Science Papers)
 Описание проекта:
 
@@ -10,7 +12,7 @@ SSP (Search of Science Papers) — это инструмент для поиск
 
 Склонируйте репозиторий:
 
-git clone https://github.com/VladislavKonoplitskij/SSP.git
+git clone https://github.com/CommissarNeutrino/SSP.git
 
 cd SSP
 
